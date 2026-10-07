@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -11,13 +12,17 @@ pipeline {
 
         stage('Build') {
             steps {
-                bat 'mvn clean package -DskipTests'
+                withMaven(maven: 'Maven-3.9.16') {
+                    bat 'mvn clean package -DskipTests'
+                }
             }
         }
 
         stage('Test') {
             steps {
-                bat 'mvn test'
+                withMaven(maven: 'Maven-3.9.16') {
+                    bat 'mvn test'
+                }
             }
 
             post {
@@ -65,6 +70,12 @@ pipeline {
                         @echo off
                         echo Deploying approved artifact...
                         echo Deployment user: %DEPLOY_USER%
+
+                        if "%DEPLOY_PASSWORD%"=="" (
+                            echo ERROR: Deployment credentials are missing
+                            exit /b 1
+                        )
+
                         deploy.bat "%WORKSPACE%\\target\\payment-2.7.jar"
                     '''
                 }
