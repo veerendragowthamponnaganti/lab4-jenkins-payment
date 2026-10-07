@@ -12,7 +12,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                withMaven(maven: 'Maven-3.9.16') {
+                withMaven(maven: 'Maven3961') {
                     bat 'mvn clean package -DskipTests'
                 }
             }
@@ -20,7 +20,7 @@ pipeline {
 
         stage('Test') {
             steps {
-                withMaven(maven: 'Maven-3.9.16') {
+                withMaven(maven: 'Maven3961') {
                     bat 'mvn test'
                 }
             }
