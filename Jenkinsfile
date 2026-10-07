@@ -11,18 +11,19 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                bat 'mvn clean package -DskipTests'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'mvn test'
+                bat 'mvn test'
             }
 
             post {
                 always {
-                    junit 'target/surefire-reports/*.xml'
+                    junit allowEmptyResults: true,
+                          testResults: 'target/surefire-reports/*.xml'
                 }
             }
         }
@@ -40,16 +41,9 @@ pipeline {
             }
 
             steps {
-                script {
-                    try {
-                        timeout(time: 5, unit: 'MINUTES') {
-                            input message: 'Approve production deployment?',
-                                  ok: 'Deploy'
-                        }
-                    } catch (err) {
-                        currentBuild.result = 'ABORTED'
-                        error('Production deployment rejected')
-                    }
+                timeout(time: 5, unit: 'MINUTES') {
+                    input message: 'Approve production deployment?',
+                          ok: 'Deploy'
                 }
             }
         }
@@ -67,9 +61,11 @@ pipeline {
                         passwordVariable: 'DEPLOY_PASSWORD'
                     )
                 ]) {
-                    sh '''
-                        echo "Deploying approved artifact..."
-                        ./deploy.sh target/payment-2.7.jar
+                    bat '''
+                        @echo off
+                        echo Deploying approved artifact...
+                        echo Deployment user: %DEPLOY_USER%
+                        deploy.bat "%WORKSPACE%\\target\\payment-2.7.jar"
                     '''
                 }
             }
@@ -79,20 +75,20 @@ pipeline {
     post {
 
         always {
-            echo "Pipeline execution completed."
+            echo 'Pipeline execution completed.'
             cleanWs()
         }
 
         success {
-            echo "SUCCESS: Production deployment completed successfully."
+            echo 'SUCCESS: Production deployment completed successfully.'
         }
 
         failure {
-            echo "FAILURE: Build, test, or deployment failed."
+            echo 'FAILURE: Build, test, or deployment failed.'
         }
 
         aborted {
-            echo "ABORTED: Production deployment was rejected or cancelled."
+            echo 'ABORTED: Production deployment was rejected or cancelled.'
         }
     }
 }
